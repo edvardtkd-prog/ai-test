@@ -1,6 +1,13 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+
+type Role = "user" | "assistant";
+
+type ChatMessage = {
+  role: Role;
+  content: string;
+};
 
 type Report = {
   funnel: {
@@ -17,103 +24,172 @@ type Report = {
   nextActions: string[];
 };
 
+const defaultBanner =
+  "100% Sports welcome bonus up to 200 EUR. Rollover 6x. Min odds 1.6. 30 days. Casino bonus up to 300 EUR with cashback and rakeback.";
+
 export default function Home() {
-  const [bannerText, setBannerText] = useState(
-    "100% Sports welcome bonus up to 200 EUR. Rollover 6x. Min odds 1.6. 30 days. Casino bonus up to 300 EUR with cashback and rakeback.",
-  );
+  const [bannerText, setBannerText] = useState(defaultBanner);
   const [report, setReport] = useState<Report | null>(null);
-  const [chatReply, setChatReply] = useState<string>("Ask AI to simulate your campaign and forecast FTD/NGR.");
-  const [chatMessage, setChatMessage] = useState("Simulate this banner for 1000 personas");
+  const [chatInput, setChatInput] = useState("Run a simulation and tell me how to improve FTD and NGR");
+  const [isSimLoading, setIsSimLoading] = useState(false);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: "assistant",
+      content:
+        "Hey — I can run simulations, forecast FTD/NGR, and suggest exact funnel changes. Ask me anything about your campaign.",
+    },
+  ]);
+
+  const modelStatus = useMemo(() => {
+    if (!messages.length) return "Unknown";
+    const hasFallback = messages.some((m) => m.content.includes("fallback"));
+    return hasFallback ? "Fallback mode" : "Live mode";
+  }, [messages]);
 
   const runSimulation = async (e: FormEvent) => {
     e.preventDefault();
-    const response = await fetch("/api/simulate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productName: "Sportsbook + Casino",
-        audienceMarket: "Estonia",
-        variantName: "Main variant",
-        adMessage: bannerText,
-        personas: 1000,
-      }),
-    });
+    setIsSimLoading(true);
 
-    const data = await response.json();
-    if (response.ok) {
-      setReport(data);
+    try {
+      const response = await fetch("/api/simulate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productName: "Sportsbook + Casino",
+          audienceMarket: "Estonia",
+          variantName: "Primary creative",
+          adMessage: bannerText,
+          personas: 1000,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setReport(data);
+      }
+    } finally {
+      setIsSimLoading(false);
     }
   };
 
-  const askChat = async (e: FormEvent) => {
+  const askLiveChat = async (e: FormEvent) => {
     e.preventDefault();
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: chatMessage }),
-    });
+    if (!chatInput.trim()) return;
 
-    const data = await response.json();
-    setChatReply(data.reply || "No response");
-    if (data.report) {
-      setReport(data.report);
+    const userMessage: ChatMessage = { role: "user", content: chatInput.trim() };
+    setMessages((prev) => [...prev, userMessage]);
+    setChatInput("");
+    setIsChatLoading(true);
+
+    try {
+      const response = await fetch("/api/live-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          bannerText,
+        }),
+      });
+
+      const data = await response.json();
+      const assistantMessage: ChatMessage = {
+        role: "assistant",
+        content:
+          response.ok && data.reply
+            ? data.reply
+            : `Chat API error: ${data.details ?? "unknown"}. Please try again.`,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      if (data.report) setReport(data.report as Report);
+    } finally {
+      setIsChatLoading(false);
     }
   };
 
   return (
-    <main>
-      <h1>AI Audience Lab</h1>
-      <p>Full-cycle AI workspace to test products, campaigns, and funnels before spending real ad budget.</p>
+    <main className="shell">
+      <header className="hero">
+        <div>
+          <p className="badge">AI Audience Lab</p>
+          <h1>Live AI Campaign Copilot</h1>
+          <p>
+            Stress-test ads, funnels, and onboarding before you spend real money. Focused on what matters most: <b>FTD</b>
+            and <b> NGR</b>.
+          </p>
+        </div>
+        <div className="heroCard">
+          <p className="muted">Chat engine status</p>
+          <p className="status">{modelStatus}</p>
+          <p className="muted">Enable real model replies by setting <code>OPENAI_API_KEY</code> in your server env.</p>
+        </div>
+      </header>
 
-      <section className="panel">
-        <h2>Campaign Simulation (1000 synthetic personas)</h2>
-        <form onSubmit={runSimulation}>
-          <label htmlFor="banner">Banner / Offer copy</label>
-          <textarea id="banner" value={bannerText} onChange={(e) => setBannerText(e.target.value)} />
-          <div style={{ marginTop: "0.8rem" }}>
-            <button type="submit">Run simulation</button>
-          </div>
-        </form>
-      </section>
+      <section className="layoutGrid">
+        <article className="glass">
+          <h2>Simulation Input</h2>
+          <form onSubmit={runSimulation}>
+            <label htmlFor="banner">Banner / Offer Copy</label>
+            <textarea id="banner" value={bannerText} onChange={(e) => setBannerText(e.target.value)} />
+            <button type="submit" disabled={isSimLoading}>{isSimLoading ? "Simulating..." : "Run 1000-person simulation"}</button>
+          </form>
+        </article>
 
-      <section className="panel">
-        <h2>Chat with AI</h2>
-        <form onSubmit={askChat}>
-          <input value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} />
-          <div style={{ marginTop: "0.8rem" }}>
-            <button type="submit">Ask AI</button>
+        <article className="glass">
+          <h2>Live Chat</h2>
+          <div className="chatWindow">
+            {messages.map((msg, idx) => (
+              <div key={`${msg.role}-${idx}`} className={`bubble ${msg.role === "assistant" ? "assistant" : "user"}`}>
+                {msg.content}
+              </div>
+            ))}
+            {isChatLoading ? <div className="bubble assistant">Thinking...</div> : null}
           </div>
-        </form>
-        <p>{chatReply}</p>
+
+          <form onSubmit={askLiveChat} className="chatForm">
+            <input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Ask for recommendations, simulations, or funnel fixes..."
+            />
+            <button type="submit" disabled={isChatLoading}>{isChatLoading ? "Sending..." : "Send"}</button>
+          </form>
+        </article>
       </section>
 
       {report ? (
-        <section className="panel">
-          <h2>Projected Funnel (Focus: FTD + NGR)</h2>
-          <div className="grid">
-            <div className="card">Impressions: {report.funnel.impressions}</div>
-            <div className="card">Clicks: {report.funnel.clicks}</div>
-            <div className="card">Signups: {report.funnel.signups}</div>
-            <div className="card">FTD: {report.funnel.firstTimeDepositors}</div>
-            <div className="card">NGR (€): {report.funnel.ngrEstimateEur}</div>
-            <div className="card">CTR: {report.funnel.ctr}</div>
-            <div className="card">Signup/Click: {report.funnel.signupRateFromClick}</div>
-            <div className="card">FTD/Signup: {report.funnel.ftdRateFromSignup}</div>
+        <section className="glass report">
+          <h2>Projected Funnel</h2>
+          <div className="metricGrid">
+            <div className="metric"><span>Impressions</span><strong>{report.funnel.impressions}</strong></div>
+            <div className="metric"><span>Clicks</span><strong>{report.funnel.clicks}</strong></div>
+            <div className="metric"><span>Signups</span><strong>{report.funnel.signups}</strong></div>
+            <div className="metric"><span>FTD</span><strong>{report.funnel.firstTimeDepositors}</strong></div>
+            <div className="metric"><span>NGR (€)</span><strong>{report.funnel.ngrEstimateEur}</strong></div>
+            <div className="metric"><span>CTR</span><strong>{report.funnel.ctr}</strong></div>
+            <div className="metric"><span>Signup / Click</span><strong>{report.funnel.signupRateFromClick}</strong></div>
+            <div className="metric"><span>FTD / Signup</span><strong>{report.funnel.ftdRateFromSignup}</strong></div>
           </div>
 
-          <h3>Insights</h3>
-          <ul>
-            {report.insights.map((insight) => (
-              <li key={insight}>{insight}</li>
-            ))}
-          </ul>
-
-          <h3>Next actions</h3>
-          <ul>
-            {report.nextActions.map((action) => (
-              <li key={action}>{action}</li>
-            ))}
-          </ul>
+          <div className="twocol">
+            <div>
+              <h3>Insights</h3>
+              <ul>
+                {report.insights.map((insight) => (
+                  <li key={insight}>{insight}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3>Next actions</h3>
+              <ul>
+                {report.nextActions.map((action) => (
+                  <li key={action}>{action}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </section>
       ) : null}
     </main>

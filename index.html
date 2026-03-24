@@ -6,56 +6,86 @@
     <title>AI Audience Lab</title>
     <style>
       :root { color-scheme: dark; }
-      body { margin: 0; font-family: Inter, Arial, sans-serif; background: #0b1020; color: #eef2ff; }
-      main { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
-      .panel { background: #131a33; border: 1px solid #243159; border-radius: 14px; padding: 16px; margin-top: 16px; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
-      .card { background: #0f1630; border: 1px solid #273565; border-radius: 12px; padding: 12px; }
-      textarea, input { width: 100%; margin-top: 8px; border-radius: 8px; border: 1px solid #2f3f75; background: #0f1630; color: #f5f7ff; padding: 10px; }
-      textarea { min-height: 120px; }
-      button { margin-top: 12px; background: #4f7cff; border: 0; color: white; font-weight: 700; border-radius: 10px; padding: 10px 14px; cursor: pointer; }
-      ul { padding-left: 20px; }
-      .muted { color: #b6c2ff; font-size: 14px; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, Arial, sans-serif;
+        background:
+          radial-gradient(1000px 300px at 10% -10%, #4f7cff55 0%, transparent 60%),
+          radial-gradient(900px 400px at 100% 0%, #43d4ff33 0%, transparent 60%),
+          #070b18;
+        color: #eef2ff;
+      }
+      main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 48px; }
+      .hero { display: grid; gap: 16px; grid-template-columns: 1.4fr 1fr; }
+      .glass { background: linear-gradient(180deg, #121d3ecc, #11182bcc); border: 1px solid #2a3f7a; border-radius: 18px; padding: 16px; }
+      .badge { margin: 0; display: inline-block; padding: 6px 10px; border-radius: 999px; border: 1px solid #6c86ff; font-size: 12px; text-transform: uppercase; background: #4f7cff22; }
+      .layout { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; margin-top: 16px; }
+      textarea, input { width: 100%; margin-top: 8px; border-radius: 12px; border: 1px solid #314483; background: #0b1126; color: #f8f9ff; padding: 10px; }
+      textarea { min-height: 140px; }
+      button { margin-top: 10px; background: linear-gradient(90deg, #4f7cff, #53d4ff); border: 0; color: #fff; font-weight: 700; border-radius: 12px; padding: 10px 14px; cursor: pointer; }
+      .chat { min-height: 260px; max-height: 340px; overflow: auto; border: 1px solid #2a3e79; border-radius: 12px; padding: 10px; background: #0a1024; }
+      .bubble { max-width: 90%; margin: 8px 0; padding: 10px 12px; border-radius: 12px; }
+      .assistant { background: #1a2751; border: 1px solid #33529f; }
+      .user { margin-left: auto; background: #22408b; border: 1px solid #4d7ff1; }
+      .metric-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); }
+      .metric { background: #0b1228; border: 1px solid #2b407e; border-radius: 12px; padding: 10px; }
+      .twocol { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+      .muted { color: #afbcf7; }
+      @media (max-width: 900px) { .hero, .layout, .twocol { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body>
     <main>
-      <h1>AI Audience Lab</h1>
-      <p>Ask AI directly, simulate 1000 target users, and preview FTD/NGR outcomes before real spend.</p>
-
-      <section class="panel">
-        <h2>Campaign simulation</h2>
-        <label for="banner">Banner / offer copy</label>
-        <textarea id="banner">100% Sports welcome bonus up to 200 EUR. Rollover 6x. Min odds 1.6. 30 days. Casino bonus up to 300 EUR with cashback and rakeback.</textarea>
-        <button id="simulateBtn">Run 1000-person simulation</button>
+      <section class="hero">
+        <article class="glass">
+          <p class="badge">AI Audience Lab</p>
+          <h1>Live Campaign Copilot</h1>
+          <p>Simulate 1000 users, forecast <b>FTD</b>/<b>NGR</b>, and improve ads before spending budget.</p>
+        </article>
+        <article class="glass">
+          <p class="muted">Deployment mode</p>
+          <p><b>Static preview</b></p>
+          <p class="muted">For true server-side live AI chat API, run the Next.js app and use <code>/api/live-chat</code>.</p>
+        </article>
       </section>
 
-      <section class="panel">
-        <h2>Chat with AI</h2>
-        <input id="chatInput" value="Simulate this banner for 1000 personas" />
-        <button id="chatBtn">Ask AI</button>
-        <p id="chatReply" class="muted">I can simulate campaigns and forecast FTD/NGR.</p>
+      <section class="layout">
+        <article class="glass">
+          <h2>Simulation Input</h2>
+          <label for="banner">Banner / Offer copy</label>
+          <textarea id="banner">100% Sports welcome bonus up to 200 EUR. Rollover 6x. Min odds 1.6. 30 days. Casino bonus up to 300 EUR with cashback and rakeback.</textarea>
+          <button id="simulateBtn">Run 1000-person simulation</button>
+        </article>
+
+        <article class="glass">
+          <h2>Chat</h2>
+          <div id="chatWindow" class="chat">
+            <div class="bubble assistant">Hey — ask me for funnel fixes, creative tests, and FTD/NGR improvement ideas.</div>
+          </div>
+          <input id="chatInput" value="Simulate this banner for 1000 personas and tell me top fixes" />
+          <button id="chatBtn">Send</button>
+        </article>
       </section>
 
-      <section class="panel" id="report" hidden>
-        <h2>Projected funnel (FTD + NGR)</h2>
-        <div class="grid" id="funnelGrid"></div>
-        <h3>Insights</h3>
-        <ul id="insights"></ul>
-        <h3>Next actions</h3>
-        <ul id="nextActions"></ul>
+      <section class="glass" id="report" hidden style="margin-top:16px;">
+        <h2>Projected Funnel (FTD + NGR)</h2>
+        <div class="metric-grid" id="funnelGrid"></div>
+        <div class="twocol" style="margin-top:12px;">
+          <div>
+            <h3>Insights</h3>
+            <ul id="insights"></ul>
+          </div>
+          <div>
+            <h3>Next actions</h3>
+            <ul id="nextActions"></ul>
+          </div>
+        </div>
       </section>
     </main>
 
     <script>
-      const weights = {
-        sports_first: 0.35,
-        bonus_hunter: 0.25,
-        casino_first: 0.2,
-        trust_first: 0.1,
-        mobile_fast: 0.1,
-      };
-
+      const weights = { sports_first: 0.35, bonus_hunter: 0.25, casino_first: 0.2, trust_first: 0.1, mobile_fast: 0.1 };
       const base = {
         sports_first: { click: 0.2, signup: 0.38, ftd: 0.43, ngrPerFtd: 54 },
         bonus_hunter: { click: 0.24, signup: 0.34, ftd: 0.31, ngrPerFtd: 39 },
@@ -63,98 +93,56 @@
         trust_first: { click: 0.14, signup: 0.44, ftd: 0.52, ngrPerFtd: 58 },
         mobile_fast: { click: 0.23, signup: 0.31, ftd: 0.29, ngrPerFtd: 35 },
       };
-
-      function multipliers(msg) {
-        const lower = msg.toLowerCase();
-        let clickBoost = 1;
-        let signupBoost = 1;
-        let ftdBoost = 1;
-        if (lower.includes('100%') || lower.includes('welcome')) clickBoost += 0.06;
-        if (lower.includes('6x') || lower.includes('min') || lower.includes('terms')) signupBoost += 0.04;
-        if (lower.includes('cashback') || lower.includes('rakeback')) ftdBoost += 0.05;
-        if (lower.length > 500) clickBoost -= 0.04;
-        return { clickBoost, signupBoost, ftdBoost };
-      }
-
-      function simulate(adMessage, personas = 1000) {
-        const m = multipliers(adMessage);
-        let clicks = 0, signups = 0, ftd = 0, ngr = 0;
-
+      const mult = (msg) => {
+        const t = msg.toLowerCase(); let c = 1, s = 1, f = 1;
+        if (t.includes('100%') || t.includes('welcome')) c += 0.06;
+        if (t.includes('6x') || t.includes('min') || t.includes('terms')) s += 0.04;
+        if (t.includes('cashback') || t.includes('rakeback')) f += 0.05;
+        if (t.length > 500) c -= 0.04;
+        return { c, s, f };
+      };
+      const simulate = (adMessage, personas = 1000) => {
+        const m = mult(adMessage); let clicks = 0, signups = 0, ftd = 0, ngr = 0;
         Object.keys(weights).forEach((segment) => {
-          const pop = Math.round(personas * weights[segment]);
-          const r = base[segment];
-          const sClicks = Math.round(pop * r.click * m.clickBoost);
-          const sSignups = Math.round(sClicks * r.signup * m.signupBoost);
-          const sFtd = Math.round(sSignups * r.ftd * m.ftdBoost);
-          clicks += sClicks;
-          signups += sSignups;
-          ftd += sFtd;
-          ngr += sFtd * r.ngrPerFtd;
+          const pop = Math.round(personas * weights[segment]); const r = base[segment];
+          const sc = Math.round(pop * r.click * m.c); const ss = Math.round(sc * r.signup * m.s); const sf = Math.round(ss * r.ftd * m.f);
+          clicks += sc; signups += ss; ftd += sf; ngr += sf * r.ngrPerFtd;
         });
-
         return {
-          funnel: {
-            impressions: personas,
-            clicks,
-            signups,
-            firstTimeDepositors: ftd,
-            ngrEstimateEur: ngr,
-            ctr: +(clicks / personas).toFixed(3),
-            signupRateFromClick: +(signups / Math.max(clicks, 1)).toFixed(3),
-            ftdRateFromSignup: +(ftd / Math.max(signups, 1)).toFixed(3),
-          },
+          funnel: { impressions: personas, clicks, signups, firstTimeDepositors: ftd, ngrEstimateEur: ngr, ctr: +(clicks / personas).toFixed(3), signupRateFromClick: +(signups / Math.max(clicks, 1)).toFixed(3), ftdRateFromSignup: +(ftd / Math.max(signups, 1)).toFixed(3) },
           insights: [
-            'Strongest response is usually from bonus-focused and mobile-fast segments when immediate value is clear.',
-            'Trust-first users convert better when rollover/min-odds terms are explicit.',
-            'Split Sports and Casino messages to reduce top-of-funnel friction.'
+            'Best early response usually comes from bonus-driven and mobile-fast segments.',
+            'Transparent terms improve trust-first conversion.',
+            'Separate Sports vs Casino creative should improve top-of-funnel efficiency.'
           ],
           nextActions: [
-            'Launch separate Sports-first and Casino-first creatives with one primary CTA each.',
-            'Track FTD and NGR per creative and segment tag.',
-            'Calibrate model assumptions with a small paid traffic smoke test.'
+            'Create two creatives with one clear CTA each (Sports-first / Casino-first).',
+            'Track FTD and NGR by creative + segment tags.',
+            'Run a small paid smoke test and recalibrate assumptions.'
           ]
         };
-      }
-
-      function render(report) {
-        const reportEl = document.getElementById('report');
+      };
+      const render = (report) => {
         const grid = document.getElementById('funnelGrid');
-        const insights = document.getElementById('insights');
-        const nextActions = document.getElementById('nextActions');
-
-        const rows = [
-          ['Impressions', report.funnel.impressions],
-          ['Clicks', report.funnel.clicks],
-          ['Signups', report.funnel.signups],
-          ['FTD', report.funnel.firstTimeDepositors],
-          ['NGR (€)', report.funnel.ngrEstimateEur],
-          ['CTR', report.funnel.ctr],
-          ['Signup/Click', report.funnel.signupRateFromClick],
-          ['FTD/Signup', report.funnel.ftdRateFromSignup],
-        ];
-
-        grid.innerHTML = rows.map(([k, v]) => `<div class="card"><strong>${k}</strong><br>${v}</div>`).join('');
-        insights.innerHTML = report.insights.map((x) => `<li>${x}</li>`).join('');
-        nextActions.innerHTML = report.nextActions.map((x) => `<li>${x}</li>`).join('');
-        reportEl.hidden = false;
-      }
-
-      document.getElementById('simulateBtn').addEventListener('click', () => {
-        const text = document.getElementById('banner').value;
-        const report = simulate(text, 1000);
-        render(report);
-      });
-
+        grid.innerHTML = [
+          ['Impressions', report.funnel.impressions], ['Clicks', report.funnel.clicks], ['Signups', report.funnel.signups], ['FTD', report.funnel.firstTimeDepositors],
+          ['NGR (€)', report.funnel.ngrEstimateEur], ['CTR', report.funnel.ctr], ['Signup/Click', report.funnel.signupRateFromClick], ['FTD/Signup', report.funnel.ftdRateFromSignup],
+        ].map(([k,v]) => `<div class="metric"><span>${k}</span><strong>${v}</strong></div>`).join('');
+        document.getElementById('insights').innerHTML = report.insights.map((x) => `<li>${x}</li>`).join('');
+        document.getElementById('nextActions').innerHTML = report.nextActions.map((x) => `<li>${x}</li>`).join('');
+        document.getElementById('report').hidden = false;
+      };
+      const addBubble = (role, text) => {
+        const chat = document.getElementById('chatWindow');
+        const div = document.createElement('div'); div.className = `bubble ${role}`; div.textContent = text; chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
+      };
+      document.getElementById('simulateBtn').addEventListener('click', () => render(simulate(document.getElementById('banner').value, 1000)));
       document.getElementById('chatBtn').addEventListener('click', () => {
-        const message = document.getElementById('chatInput').value.toLowerCase();
-        const text = document.getElementById('banner').value;
-        if (message.includes('simulate') || message.includes('test') || message.includes('banner')) {
-          const report = simulate(text, 1000);
-          render(report);
-          document.getElementById('chatReply').textContent = 'Done: simulated 1000 synthetic personas and updated FTD/NGR forecast.';
-          return;
-        }
-        document.getElementById('chatReply').textContent = 'Try: "simulate this banner for 1000 personas".';
+        const input = document.getElementById('chatInput'); const msg = input.value.trim(); if (!msg) return;
+        addBubble('user', msg);
+        const report = simulate(document.getElementById('banner').value, 1000); render(report);
+        addBubble('assistant', 'Done. I ran a 1000-person simulation and updated your FTD/NGR dashboard.');
+        input.value = '';
       });
     </script>
   </body>
